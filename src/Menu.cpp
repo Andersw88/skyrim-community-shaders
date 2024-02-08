@@ -850,10 +850,11 @@ void Menu::ProcessInputEventQueue()
 		}
 
 		if (event.device == RE::INPUT_DEVICE::kKeyboard) {
+			uint32_t mapped_key = MapVirtualKeyEx(event.keyCode, MAPVK_VSC_TO_VK_EX, GetKeyboardLayout(0));
 			uint32_t key = DIKToVK(event.keyCode);
 			logger::trace("Detected key code {} ({})", event.keyCode, key);
 			if (key == event.keyCode)
-				key = MapVirtualKeyEx(event.keyCode, MAPVK_VSC_TO_VK_EX, GetKeyboardLayout(0));
+				key = mapped_key;
 			if (!event.IsPressed()) {
 				if (settingToggleKey) {
 					toggleKey = key;
@@ -864,7 +865,7 @@ void Menu::ProcessInputEventQueue()
 				} else if (settingsEffectsToggle) {
 					effectToggleKey = key;
 					settingsEffectsToggle = false;
-				} else if (key == toggleKey) {
+				} else if (key == toggleKey || mapped_key == toggleKey) {
 					IsEnabled = !IsEnabled;
 				} else if (key == skipCompilationKey) {
 					auto& shaderCache = SIE::ShaderCache::Instance();
