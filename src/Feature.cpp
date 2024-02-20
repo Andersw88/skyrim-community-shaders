@@ -87,12 +87,13 @@ const std::vector<Feature*>& Feature::GetFeatureList()
 	};
 
 	static std::vector<Feature*> featuresVR = {
-		DynamicCubemaps::GetSingleton(),
 		GrassLighting::GetSingleton(),
 		GrassCollision::GetSingleton(),
+		ScreenSpaceShadows::GetSingleton(),
 		ExtendedMaterials::GetSingleton(),
 		WetnessEffects::GetSingleton(),
-		LightLimitFix::GetSingleton()
+		LightLimitFix::GetSingleton(),
+		DynamicCubemaps::GetSingleton()
 	};
 
 	return REL::Module::IsVR() ? featuresVR : features;
