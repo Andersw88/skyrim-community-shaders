@@ -102,7 +102,7 @@ void ScreenSpaceShadows::DrawSettings()
 
 	if (screenSpaceShadowsTextureTemp != nullptr) {
 		ImGui::Text("screenSpaceShadowsTextureTemp");
-		ImGui::Image(screenSpaceShadowsTextureTemp->srv.get(), { screenSpaceShadowsTextureTemp->desc.Width / 10.f, screenSpaceShadowsTextureTemp->desc.Height / 10.f });
+		ImGui::Image(screenSpaceShadowsTextureTemp->srv.get(), { screenSpaceShadowsTextureTemp->desc.Width / 5.f, screenSpaceShadowsTextureTemp->desc.Height / 5.f });
 	}
 }
 
@@ -245,12 +245,12 @@ void ScreenSpaceShadows::ModifyLighting(const RE::BSShader*, const uint32_t)
 
 				D3D11_TEXTURE2D_DESC texDesc{};
 				shadowMask.texture->GetDesc(&texDesc);
-				texDesc.Format = DXGI_FORMAT_R16_FLOAT;
+				texDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 				texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_RENDER_TARGET;
 				screenSpaceShadowsTexture = new Texture2D(texDesc);
-
 				texDesc.Width /= 2;
 				texDesc.Height /= 2;
+
 				screenSpaceShadowsTextureTemp = new Texture2D(texDesc);
 
 				D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};

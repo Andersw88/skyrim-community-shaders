@@ -29,7 +29,7 @@
 
 #include "Common.hlsl"
 
-Texture2D<float> OcclusionTexture : register(t1);
+Texture2D<float4> OcclusionTexture : register(t1);
 
 #define cKernelSize 12
 
@@ -87,7 +87,7 @@ static const float2 BlurOffsets[cKernelSize] = {
 		return;
 	
 	float WeightSum = 0.114725602f;
-	float color1 = OcclusionTexture.SampleLevel(LinearSampler, TexCoord, 0).r * WeightSum;
+	float4 color1 = OcclusionTexture.SampleLevel(LinearSampler, TexCoord, 0) * WeightSum;
 
     float depth1 = InverseProjectUVZ(TexCoord, startDepth, eyeIndex).z;
 
@@ -100,7 +100,7 @@ static const float2 BlurOffsets[cKernelSize] = {
 #elif defined(VERTICAL)
 		float2 uv = TexCoord + (BlurOffsets[i] * OffsetMask * RcpBufferDim / 2) * BlurRadius;
 #endif
-		float4 color2 = OcclusionTexture.SampleLevel(LinearSampler, uv, 0).r;
+		float4 color2 = OcclusionTexture.SampleLevel(LinearSampler, uv, 0);
 		float depth2 = InverseProjectUV(uv, eyeIndex).z;
 
 		// Depth-awareness

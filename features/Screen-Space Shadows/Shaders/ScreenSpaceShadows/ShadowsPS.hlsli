@@ -5,7 +5,7 @@ cbuffer SSSData : register(b5)
 };
 
 Texture2D<float> TexDepthSampler : register(t20);
-Texture2D<float> TexOcclusionSampler : register(t21);
+Texture2D<float4> TexOcclusionSampler : register(t21);
 
 #define LinearSampler SampShadowMaskSampler
 
@@ -30,7 +30,7 @@ float PrepassScreenSpaceShadows(float3 positionWS, uint a_eyeIndex)
 #	endif
 		
 		float shadow = TexOcclusionSampler.SampleLevel(LinearSampler, coords, 0);
-		return shadow;
+		return shadow.r;
 	}
 	return 1;
 #endif

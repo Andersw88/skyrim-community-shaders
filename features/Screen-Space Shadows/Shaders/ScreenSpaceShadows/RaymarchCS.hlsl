@@ -32,8 +32,8 @@ float InterleavedGradientNoise(float2 uv)
 
 float ScreenSpaceShadowsUV(float2 texcoord, float3 lightDirectionVS, uint eyeIndex)
 {
+	// Temp hardcore lightdirection to straight down
 	lightDirectionVS = mul(ViewMatrix[eyeIndex], float4(0, 0, 1, 0)).xyz;
-	// lightDirectionVS = (float4(lightDirectionVS, 0) * ViewMatrix[eyeIndex]).xyz;
 
 	// // Ignore the depthStencil
 	float stencil = GetStencil(texcoord);
@@ -125,5 +125,5 @@ float ScreenSpaceShadowsUV(float2 texcoord, float3 lightDirectionVS, uint eyeInd
     uint eyeIndex = 0;
 #endif  // VR
 
-	OcclusionRW[DTid.xy] = ScreenSpaceShadowsUV(TexCoord, InvDirLightDirectionVS[eyeIndex].xyz, eyeIndex);
+	OcclusionRW[DTid.xy] = float4(ScreenSpaceShadowsUV(TexCoord, InvDirLightDirectionVS[eyeIndex].xyz, eyeIndex), 0, 0, 1);
 }

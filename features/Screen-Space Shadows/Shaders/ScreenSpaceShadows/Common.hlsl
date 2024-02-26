@@ -3,7 +3,7 @@
 	#define VR
 #endif
 
-RWTexture2D<float> OcclusionRW : register(u0);
+RWTexture2D<float4> OcclusionRW : register(u0);
 
 SamplerState LinearSampler : register(s0);
 
