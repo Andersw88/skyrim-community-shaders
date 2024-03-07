@@ -48,6 +48,7 @@ struct ScreenSpaceShadows : Feature
 		DirectX::XMMATRIX InvViewMatrix[2];
 		DirectX::XMFLOAT4 DynamicRes;
 		DirectX::XMVECTOR InvDirLightDirectionVS[2];
+		float4 CameraData[2];
 		float ShadowDistance = 10000;
 		Settings Settings;
 	};

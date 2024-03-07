@@ -3,15 +3,30 @@
 Texture2D<float> ShadowTexture : register(t1);
 Texture2D<uint2> StencilTexture : register(t89);
 
+// // Get a raw stencil from the depth buffer.
+// float GetStencil(float2 uv)
+// {
+// 	uint width = 4936;
+// 	uint height = 2740;
+// 	uint stencil = StencilTexture.Load(int3(uv.x * width, uv.y * height, 0)).g;
+// 	return stencil;
+// 	// return StencilTexture.SampleLevel(LinearSampler, uv * DynamicRes.xy, 0).g;
+// }
+
 // Get a raw stencil from the depth buffer.
-float GetStencil(float2 uv)
+float GetStencil(float2 uv, uint a_eyeIndex)
 {
-	uint width = 4936;
-	uint height = 2740;
-	uint stencil = StencilTexture.Load(int3(uv.x * width, uv.y * height, 0)).g;
+	// uint width = 4936;
+	// uint height = 2740;
+
+	// uv.x = (uv.x + (float)a_eyeIndex) / 2;
+	uv = ConvertToStereoUV(uv, a_eyeIndex);
+	// uint stencil = StencilTexture.Load(int3(uv.x * width, uv.y * height, 0)).g;
+	uint stencil = StencilTexture.Load(int3(uv * BufferDim, 0)).g;
 	return stencil;
 	// return StencilTexture.SampleLevel(LinearSampler, uv * DynamicRes.xy, 0).g;
 }
+
 
 bool IsSaturated(float value) { return value == saturate(value); }
 bool IsSaturated(float2 value) { return IsSaturated(value.x) && IsSaturated(value.y); }
@@ -33,19 +48,25 @@ float InterleavedGradientNoise(float2 uv)
 float ScreenSpaceShadowsUV(float2 texcoord, float3 lightDirectionVS, uint eyeIndex)
 {
 	// Temp hardcore lightdirection to straight down
-	lightDirectionVS = mul(ViewMatrix[eyeIndex], float4(0, 0, 1, 0)).xyz;
+	lightDirectionVS = normalize( float3(0, -1, 1));
+	lightDirectionVS = mul(InvViewMatrix[eyeIndex], lightDirectionVS).xyz;
+	// lightDirectionVS = mul(InvViewMatrix[eyeIndex], float4(0, 0, 1, 0)).xyz;
+	// float3 normalizedLightDirectionVS = WorldToView(lightDirectionVS, true, eyeIndex);
 
 	// // Ignore the depthStencil
-	float stencil = GetStencil(texcoord);
+	texcoord.x *= 2;
+	// uv.x = (uv.x + (float)a_eyeIndex) * 2;
+	float stencil = GetStencil(texcoord, eyeIndex);
 	if (stencil != 0)
 		return 1;
 
 	// Ignore the sky
-    float startDepth = GetDepth(texcoord);
+    float startDepth = GetDepth(texcoord, eyeIndex);
 	if (startDepth >= 1)
 		return 1;
 
 	// Compute ray position in view-space
+	
     float3 rayPos = InverseProjectUVZ(texcoord, startDepth, eyeIndex);
 
 	// Blends effect variables between near, mid and far field
@@ -63,10 +84,12 @@ float ScreenSpaceShadowsUV(float2 texcoord, float3 lightDirectionVS, uint eyeInd
 
 	// Compute ray step
 	float3 rayStep = lightDirectionVS * stepLength;
+	// rayStep.x /= 2.0f;
+	// rayStep.y /= 2.0f;
 
-	// Offset starting position with interleaved gradient noise
-	float offset = InterleavedGradientNoise(texcoord * BufferDim);
-	rayPos += rayStep * offset;
+	// // Offset starting position with interleaved gradient noise
+	// float offset = InterleavedGradientNoise(texcoord * BufferDim);
+	// rayPos += rayStep * offset;
 
 	float thickness = lerp(NearThickness, rayPos.z * FarThicknessScale, blendFactorFar);
 
@@ -81,18 +104,20 @@ float ScreenSpaceShadowsUV(float2 texcoord, float3 lightDirectionVS, uint eyeInd
 		// Step the ray
 		rayPos += rayStep;
         rayUV = ViewToUV(rayPos, true, eyeIndex);
+		// rayUV.x /= 2.0f;
 
-		// Ensure the UV coordinates are inside the screen
-		if (!IsSaturated(rayUV))
-			break;
+		// // Ensure the UV coordinates are inside the screen
+		// if (!IsSaturated(rayUV))
+		// 	break;
 
 		// Compute the difference between the ray's and the camera's depth
 
-		float stencil = GetStencil(rayUV);
+		float stencil = GetStencil(rayUV, eyeIndex);
 		if (stencil != 0)
 			break;
 
-        float rayDepth = InverseProjectUV(rayUV, eyeIndex).z;
+        // float rayDepth = InverseProjectUV(rayUV, eyeIndex).z;
+        float rayDepth = GetScreenDepth(rayUV, eyeIndex);
 
 		// Difference between the current ray distance and the marched light
 		float depthDelta = rayPos.z - rayDepth;
@@ -120,10 +145,10 @@ float ScreenSpaceShadowsUV(float2 texcoord, float3 lightDirectionVS, uint eyeInd
 	float2 TexCoord = (DTid.xy + 0.5) * RcpBufferDim * DynamicRes.zw;
 	
 #ifdef VR
-	uint eyeIndex = (TexCoord.x >= 0.5) ? 1 : 0;
+	uint eyeIndex = (TexCoord.x >= 0.5) ? 0.5 : 0;
 #else
     uint eyeIndex = 0;
 #endif  // VR
 
-	OcclusionRW[DTid.xy] = float4(ScreenSpaceShadowsUV(TexCoord, InvDirLightDirectionVS[eyeIndex].xyz, eyeIndex), 0, 0, 1);
+	OcclusionRW[DTid.xy] = float4(ScreenSpaceShadowsUV(TexCoord, InvDirLightDirectionVS[1].xyz, eyeIndex), 0, 0, 1);
 }

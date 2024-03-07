@@ -322,25 +322,40 @@ void ScreenSpaceShadows::ModifyLighting(const RE::BSShader*, const uint32_t)
 						if (REL::Module::IsVR())
 							data.ProjMatrix[eyeIndex] = shadowState->GetVRRuntimeData().cameraData.getEye(eyeIndex).projMat;
 						else
-							data.ProjMatrix[eyeIndex] = shadowState->GetRuntimeData().cameraData.getEye().projMat;
+							data.ProjMatrix[eyeIndex] = shadowState->GetRuntimeData().cameraData.getEye().projMatrixUnjittered;
 
 						data.InvProjMatrix[eyeIndex] = XMMatrixInverse(nullptr, data.ProjMatrix[eyeIndex]);
+						data.CameraData[eyeIndex] = Util::GetCameraData();
 
-						auto& direction = dirLight->GetWorldDirection();
+						// auto& direction = dirLight->GetWorldDirection();
 						DirectX::XMFLOAT3 position{};
-						position.x = -direction.x;
-						position.y = -direction.y;
-						position.z = -direction.z;
+						// position.x = -direction.x;
+						// position.y = -direction.y;
+						// position.z = -direction.z;
 
-						if (!REL::Module::IsVR())
-							data.ViewMatrix[eyeIndex] = shadowState->GetRuntimeData().cameraData.getEye().viewMat;
-						else
-							data.ViewMatrix[eyeIndex] = shadowState->GetVRRuntimeData().cameraData.getEye(eyeIndex).viewMat;
+						position.x = 0;
+						// position.y = 0;
+						// position.z = -1;
 
-						data.InvViewMatrix[eyeIndex] = XMMatrixInverse(nullptr, data.ViewMatrix[eyeIndex]);
+						position.y = 0;
+						position.z = 1;
+
+						// if (!REL::Module::IsVR())
+						// 	data.ViewMatrix[eyeIndex] = shadowState->GetRuntimeData().cameraData.getEye().viewMat;
+						// else
+						data.ViewMatrix[eyeIndex] = XMMatrixTranspose(shadowState->GetVRRuntimeData().cameraData.getEye(eyeIndex).viewMat);
+						// data.ViewMatrix[eyeIndex] = shadowState->GetVRRuntimeData().cameraData.getEye(eyeIndex).viewUp;
+
+						data.InvViewMatrix[eyeIndex] = XMMatrixTranspose(XMMatrixInverse(nullptr, shadowState->GetVRRuntimeData().cameraData.getEye(eyeIndex).viewMat));
 
 						auto invDirLightDirectionWS = XMLoadFloat3(&position);
-						data.InvDirLightDirectionVS[eyeIndex] = XMVector3TransformCoord(invDirLightDirectionWS, data.ViewMatrix[eyeIndex]);
+						// auto invDirLightDirectionWS = shadowState->GetVRRuntimeData().cameraData.getEye(eyeIndex).viewUp;
+
+						data.InvDirLightDirectionVS[0] = invDirLightDirectionWS;
+						// data.InvDirLightDirectionVS[0] = XMMatrixTranspose(shadowState->GetVRRuntimeData().cameraData.getEye(eyeIndex).viewMat) invDirLightDirectionWS;
+						// auto invDirLightDirectionWS2 = XMVector3TransformCoord(invDirLightDirectionWS, XMMatrixTranspose(data.InvViewMatrix[eyeIndex]));
+						data.InvDirLightDirectionVS[1] = XMVector3TransformCoord(invDirLightDirectionWS, data.InvViewMatrix[eyeIndex]);
+						// data.InvDirLightDirectionVS[1] = invDirLightDirectionWS;
 					}
 
 					data.ShadowDistance = 10000.0f;
