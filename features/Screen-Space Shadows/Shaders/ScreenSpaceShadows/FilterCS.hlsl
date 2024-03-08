@@ -82,14 +82,20 @@ static const float2 BlurOffsets[cKernelSize] = {
     uint eyeIndex = 0;
 #endif  // VR
 
-	float startDepth = GetDepth(TexCoord, eyeIndex);
+	// ConvertFromStereoUV
+
+	float startDepth = GetDepth2(TexCoord);
 	if (startDepth >= 1)
+	{
+	// 	OcclusionRW[DTid.xy] = float4(1,1,1,1);
 		return;
+	}
 	
 	float WeightSum = 0.114725602f;
 	float4 color1 = OcclusionTexture.SampleLevel(LinearSampler, TexCoord, 0) * WeightSum;
 
     float depth1 = InverseProjectUVZ(TexCoord, startDepth, eyeIndex).z;
+    // float depth1 = GetScreenDepth(TexCoord, startDepth, eyeIndex);
 
 	float depthDrop = depth1 * BlurDropoff;
 

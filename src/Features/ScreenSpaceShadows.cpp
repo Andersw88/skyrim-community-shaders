@@ -327,18 +327,15 @@ void ScreenSpaceShadows::ModifyLighting(const RE::BSShader*, const uint32_t)
 						data.InvProjMatrix[eyeIndex] = XMMatrixInverse(nullptr, data.ProjMatrix[eyeIndex]);
 						data.CameraData[eyeIndex] = Util::GetCameraData();
 
-						// auto& direction = dirLight->GetWorldDirection();
+						auto& direction = dirLight->GetWorldDirection();
 						DirectX::XMFLOAT3 position{};
-						// position.x = -direction.x;
-						// position.y = -direction.y;
-						// position.z = -direction.z;
+						position.x = -direction.x;
+						position.y = -direction.y;
+						position.z = -direction.z;
 
-						position.x = 0;
+						// position.x = 0;
 						// position.y = 0;
-						// position.z = -1;
-
-						position.y = 0;
-						position.z = 1;
+						// position.z = 1;
 
 						// if (!REL::Module::IsVR())
 						// 	data.ViewMatrix[eyeIndex] = shadowState->GetRuntimeData().cameraData.getEye().viewMat;
